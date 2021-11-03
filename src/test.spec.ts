@@ -1,1 +1,0 @@
-console.log('./src/test.spec.ts compiled')
