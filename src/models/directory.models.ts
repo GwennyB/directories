@@ -6,7 +6,7 @@ export interface DirectoryInterface {
   name: string;
   parent: DirectoryInterface;
   contents: DirectoryContents;
-  addChild: Function;
-  removeChild: Function;
-  updateParent: Function;
+  addChild(newChild: DirectoryInterface): void;
+  removeChild(childName: string): void;
+  updateParent(newParent: DirectoryInterface): void;
 }

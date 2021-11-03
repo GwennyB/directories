@@ -12,28 +12,29 @@ export class Directory implements DirectoryInterface {
   ) { }
 
   updateParent(newParent: DirectoryInterface): void {
-    const isValid = this.validateDirectory(newParent);
-    // TODO: implement
+    this.validateDirectory(newParent);
+    newParent.addChild(this);
+    this.parent.removeChild(this.name);
+    this.parent = newParent;
   }
 
   addChild(newChild: DirectoryInterface): void {
-    const isValid = this.validateDirectory(newChild);
-    // TODO: implement
+    this.validateDirectory(newChild);
+    this.contents[newChild.name] = newChild;
   }
 
   removeChild(childName: string): void {
-    // TODO: implement
+    delete this.contents[childName];
   }
 
-  private validateDirectory(directory: DirectoryInterface): boolean {
+  private validateDirectory(directory: DirectoryInterface): void {
     if (
       directory == null
       || directory.name === undefined
       || directory.contents === undefined
       || directory.contents === undefined
     ) {
-      return false;
+      throw Error('Directory is invalid.');
     }
-    return true;
   }
 }

@@ -1,13 +1,14 @@
 import { Commands } from "../models/commands.enum";
 import { DirectoryInterface } from "../models/directory.models";
 import { Directory } from "./directory.model";
+import * as fs from "fs";
 
 export class DirectoryManager {
   private directory: Directory;
 
   constructor() {
     this.directory = new Directory(
-      "[root]",
+      "",
       null,
       {}
     )
@@ -17,63 +18,80 @@ export class DirectoryManager {
    * Starts console input listener.
    */
   listen(): void {
-    console.log(`\n
-    What would you like to do?
-
-      -> Enter 'LIST' to view all directories and where they live.
-      -> Enter 'CREATE <path>' to create a new folder in an existing folder.
-      -> Enter 'DELETE <path>' to delete an existing folder.
-      -> Enter 'MOVE <path_1> <path_2>' to move an existing folder at 'path_1' to an existing location 'path_2'.
-      -> Enter 'PATH' to use instructions from a file.
-
-      -> Press 'enter' to exit.`);
+    this.promptUser();
 
     process.stdin.on("data", this.handleInput.bind(this));
   }
 
-  private handleInput(chunk: Buffer): void {
-    const instructionLine = chunk.toString().split('\n')[0];
-    const instructionParts: string[] = instructionLine.split(' ');
+  private promptUser(): void {
+    console.log(`
 
-    const command: string = instructionParts[0];
-    const args: string[] = instructionParts.slice(1);
-
-    this.processInstruction(command, args);
+    -------------------------------------------------------------------------
+    What would you like to do?
+    
+    -> Enter 'LIST' to view all directories and where they live.
+    -> Enter 'CREATE <path>' to create a new folder in an existing folder.
+    -> Enter 'DELETE <path>' to delete an existing folder.
+    -> Enter 'MOVE <path_1> <path_2>' to move an existing folder at 'path_1'
+    to an existing location 'path_2'.
+    -> Enter 'PATH' to use instructions from a file.
+    
+    -> Press 'enter' to exit.
+    -------------------------------------------------------------------------
+    
+    `);
   }
 
-  private processInstruction(command: string, args: string[]): void {
+  private handleInput(chunk: Buffer): any {
+    try {
+      const instructionLine = chunk.toString().split('\n')[0];
 
+      this.processInstruction(instructionLine);
+      this.promptUser();
+    } catch (error: unknown) {
+      console.log('ERROR:', (error as Error).message || 'unknown error')
+    }
+  }
+  
+  private processInstruction(instructionLine: string): any {
+    const instructionParts: string[] = instructionLine.split(' ');
+    const command: string = instructionParts[0];
+    const args: string[] = instructionParts.slice(1);
     switch (command) {
       case Commands.LIST:
         this.listDirectoryTree(this.directory);
         break;
       case Commands.CREATE:
-        const [createPath] = args;
-        if (createPath == null) {
-          console.log("Request must include intended directory path. Please try again.");
+        try {
+          const [createPath] = this.parsePaths(args);
+          this.createDirectory(createPath);
+        } catch (error) {
+          console.log(`Cannot create ${(args && args[0]) || 'undefined'} - `, (error as Error).message);
+        } finally {
           break;
         }
-        this.createDirectory(createPath);
-        break;
       case Commands.DELETE:
-        const [deletePath] = args;
-        if (deletePath == null) {
-          console.log("Request must include directory path. Please try again.");
+        try {
+          const [deletePath] = this.parsePaths(args);
+          this.deleteDirectory(deletePath);
+        } catch (error) {
+          console.log(`Cannot delete ${(args && args[0]) || 'undefined'} - `, (error as Error).message);
+        } finally {
           break;
         }
-        this.deleteDirectory(deletePath);
-        break;
       case Commands.MOVE:
-        const [startPath, endPath] = args;
-        if (startPath == null || endPath == null) {
-          console.log("Request must include start and end paths. Please try again.");
+        try {
+          const [startPath, endPath] = this.parsePaths(args);
+          this.moveDirectory(startPath, endPath)
+          break;
+        } catch (error) {
+          console.log(`Cannot move ${(args && args[0]) || 'undefined'} to ${(args && args[1]) || 'undefined'} - `, (error as Error).message);
+        } finally {
           break;
         }
-        this.moveDirectory(startPath, endPath)
-        break;
       case Commands.PATH:
-        const [filePath] = args;
-        this.handleInstructionsFile();
+        const path = args[0];
+        this.handleInstructionsFile(path);
         break;
       case Commands.EXIT:
         process.exit();
@@ -83,46 +101,129 @@ export class DirectoryManager {
     }
   }
 
-  private createDirectory(
-    path: string,
-    newDirectory: DirectoryInterface = null
+  private getDirectory(
+    path: string[],
+    startDirectory: DirectoryInterface,
   ): DirectoryInterface {
-    // TODO: navigate to the new 'parent' and create new 'child'
-    // TODO: print success/failure message
+    // Return last found directory at end of 'path' array:
+    if (path.length === 0) {
+      return startDirectory;
+    }
 
-    // TODO: return new 'child'
-    return null;
+    // Get next directory:
+    const currDirName = path[0];
+    const currentDir = startDirectory.contents[currDirName];
+    if (currentDir == null) {
+      throw Error(`${currDirName} does not exist`);
+    }
+    // Get list of remaining directories:
+    const nextPath = path.slice(1);
+
+    // Repeat while 'path' still contains directories:
+    return this.getDirectory(nextPath, currentDir);
   }
 
-  private getDirectory(path: string): DirectoryInterface {
-    // TODO: crawl 'this.directory' along the provided path.
+  private createDirectory(path: PathParts): void {
+    const parent = this.getDirectory(path.parentPath, this.directory);
+    const child = new Directory(path.childName, parent);
+    parent.addChild(child);
 
-    return null;
+    const success = parent.contents[child.name] != null;
+    if (success) {
+      console.log(`CREATE ${path.pathInput}`);
+    }
   }
 
-  private deleteDirectory(path: string): void {
-    // TODO: navigate to the new 'parent' and delete existing 'child'
-    // TODO: print success/failure message
+  private deleteDirectory(path: PathParts): void {
+    try {
+      const parent = this.getDirectory(path.parentPath, this.directory);
+      parent.removeChild(path.childName);
+
+      const success = parent.contents[path.childName] == null;
+      if (success) {
+        console.log(`DELETE ${path.pathInput}`);
+      }
+    } catch (error) {
+      const message: string = (error as Error).message || 'unknown error';
+      console.log(`Cannot delete ${path && path.pathInput} - ${message}`);
+    }
   }
 
-  private moveDirectory(currentPath: string, newPath: string): void {
-
+  private moveDirectory(currentPath: PathParts, newPath: PathParts): void {
+    try {
+      const oldParent = this.getDirectory(currentPath.parentPath, this.directory);
+      const newParent = this.getDirectory(newPath.childPath, this.directory);
+      const child = oldParent.contents[currentPath.childName];
+      // newParent.addChild(child);
+      child.updateParent(newParent);
+      // oldParent.removeChild(child.name);
+    } catch (error) {
+      const message: string = (error as Error).message || 'unknown error';
+      console.log(`Cannot move ${currentPath} to ${newPath} - ${message}`);
+    }
   }
 
-  private listDirectoryTree(directory: DirectoryInterface): void {
-    // TODO: crawl 'this.directory' along all paths
-    // TODO: print 'name' at proper indent for each directory
-    // Temporary - for test:
-    console.log(JSON.stringify(directory, null, 2));
+  private listDirectoryTree(directory: DirectoryInterface, indent = ''): void {
+    // Print this directory:
+    let newIndent = indent;
+    if (directory != this.directory) {
+      console.log(`${indent}${directory.name}`)
+      newIndent += '  ';
+    }
+
+    // Print all children:
+    const children: DirectoryInterface[] = Object.values(directory.contents)
+      .sort((a, b) => a.name < b.name ? -1 : 1);
+    children.forEach((child) => {
+      this.listDirectoryTree(child, newIndent);
+    });
   }
 
 
   // helpers:
+  private parsePaths(pathInputs: string[]): PathParts[] {
+    if (pathInputs == null || !pathInputs.length) {
+      throw Error('Path is required. Please try again.');
+    }
+    const parsedPaths: PathParts[] = pathInputs.reduce((acc, pathInput) => {
+      const pathParts = pathInput.split('/');
+      const parentPath = pathParts.slice(0, pathParts.length - 1);
+      const parsedPath: PathParts = {
+        pathInput,
+        parentPath: pathParts.slice(0, pathParts.length - 1),
+        parentName: parentPath[parentPath.length - 1],
+        childPath: pathParts,
+        childName: pathParts[pathParts.length - 1],
+      };
+      if (parsedPath.childName.replace(' ', '') === '') {
+        throw Error('Path is required. Please try again.');
+      }
 
-  private handleInstructionsFile() {
-    // TODO: read instructions from file
-    //    parse into lines
-    //    send to instruction line handler
-    console.log("This feature is not yet implemented.");
+      return acc.concat([parsedPath]);
+    }, []);
+
+    return parsedPaths;
   }
+
+  private handleInstructionsFile(path: string): void {
+    console.log(`\nFetching instructions from ${path}...\n`);
+    if (path == null) {
+      console.log('Path to instructions file is invalid. Please try again.');
+      return;
+    }
+    const instructionLines = fs.readFileSync(path)
+      .toString()
+      .split('\n');
+    instructionLines.forEach((instructionLine) => {
+      this.processInstruction(instructionLine)
+    });
+  }
+}
+
+interface PathParts {
+  pathInput: string;
+  parentPath: string[];
+  parentName: string;
+  childPath: string[];
+  childName: string,
 }
