@@ -1,7 +1,9 @@
 import { Commands } from "../models/commands.enum";
 import { DirectoryInterface } from "../models/directory.models";
-import { Directory } from "./directory.model";
+import { Directory } from "./directory";
 import * as fs from "fs";
+import { PathParts } from "../models/pathParts.model";
+import { parsePaths } from "../helpers/parsePaths.helper";
 
 export class DirectoryManager {
   private directory: Directory;
@@ -63,7 +65,7 @@ export class DirectoryManager {
         break;
       case Commands.CREATE:
         try {
-          const [createPath] = this.parsePaths(args);
+          const [createPath] = parsePaths(args);
           this.createDirectory(createPath);
         } catch (error) {
           console.log(`Cannot create ${(args && args[0]) || 'undefined'} - `, (error as Error).message);
@@ -72,7 +74,7 @@ export class DirectoryManager {
         }
       case Commands.DELETE:
         try {
-          const [deletePath] = this.parsePaths(args);
+          const [deletePath] = parsePaths(args);
           this.deleteDirectory(deletePath);
         } catch (error) {
           console.log(`Cannot delete ${(args && args[0]) || 'undefined'} - `, (error as Error).message);
@@ -81,7 +83,7 @@ export class DirectoryManager {
         }
       case Commands.MOVE:
         try {
-          const [startPath, endPath] = this.parsePaths(args);
+          const [startPath, endPath] = parsePaths(args);
           this.moveDirectory(startPath, endPath)
           break;
         } catch (error) {
@@ -181,29 +183,6 @@ export class DirectoryManager {
 
 
   // helpers:
-  private parsePaths(pathInputs: string[]): PathParts[] {
-    if (pathInputs == null || !pathInputs.length) {
-      throw Error('Path is required. Please try again.');
-    }
-    const parsedPaths: PathParts[] = pathInputs.reduce((acc, pathInput) => {
-      const pathParts = pathInput.split('/');
-      const parentPath = pathParts.slice(0, pathParts.length - 1);
-      const parsedPath: PathParts = {
-        pathInput,
-        parentPath: pathParts.slice(0, pathParts.length - 1),
-        parentName: parentPath[parentPath.length - 1],
-        childPath: pathParts,
-        childName: pathParts[pathParts.length - 1],
-      };
-      if (parsedPath.childName.replace(' ', '') === '') {
-        throw Error('Path is required. Please try again.');
-      }
-
-      return acc.concat([parsedPath]);
-    }, []);
-
-    return parsedPaths;
-  }
 
   private handleInstructionsFile(path: string): void {
     console.log(`\nFetching instructions from ${path}...\n`);
@@ -218,12 +197,4 @@ export class DirectoryManager {
       this.processInstruction(instructionLine)
     });
   }
-}
-
-interface PathParts {
-  pathInput: string;
-  parentPath: string[];
-  parentName: string;
-  childPath: string[];
-  childName: string,
 }
