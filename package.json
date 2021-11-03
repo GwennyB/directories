@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "clean": "rimraf ./dist",
-    "compile": "tsc --outDir dist",
+    "compile": "tsc --project tsconfig.json --outDir dist",
     "build": "npm run clean && npm run compile",
     "start:app": "node ./dist/index.js",
     "start": "npm run build && npm run start:app",
     "clean:test": "rimraf ./dist_test",
-    "compile:test": "tsc --outDir dist_test",
+    "compile:test": "tsc --project tsconfig.test.json --outDir dist_test",
     "test:execute": "node ./dist_test/config/jasmine.runner.js",
+    "help": "tsc --help",
     "test": "npm run clean:test && npm run compile:test && npm run test:execute"
   },
   "repository": {
