@@ -112,6 +112,7 @@ export class DirectoryManager {
       case Commands.CREATE:
         try {
           const [createPath] = parsePaths(args);
+          console.info(`${Commands.CREATE} ${createPath.pathInput}`);
           this.createDirectory(createPath);
         } catch (error) {
           console.error(`Cannot create ${(args && args[0]) || 'undefined'} - `, (error as Error).message);
@@ -121,15 +122,17 @@ export class DirectoryManager {
       case Commands.DELETE:
         try {
           const [deletePath] = parsePaths(args);
+          console.info(`${Commands.DELETE} ${deletePath.pathInput}`);
           this.deleteDirectory(deletePath);
         } catch (error) {
-          console.error(`Cannot delete ${(args && args[0]) || 'undefined'} - `, (error as Error).message);
+          console.error(`Cannot delete ${(args && args[0]) || 'undefined'} -`, (error as Error).message);
         } finally {
           break;
         }
       case Commands.MOVE:
         try {
           const [startPath, endPath] = parsePaths(args);
+          console.info(`${Commands.MOVE} ${startPath.pathInput} ${endPath.pathInput}`);
           this.moveDirectory(startPath, endPath)
           break;
         } catch (error) {
@@ -187,11 +190,6 @@ export class DirectoryManager {
     const parent = this.getDirectory(path.parentPath, this.directory);
     const child = new Directory(path.childName, parent);
     parent.addChild(child);
-
-    const success = parent.contents[child.name] != null;
-    if (success) {
-      console.info(`CREATE ${path.pathInput}`);
-    }
   }
 
   /**
@@ -201,11 +199,6 @@ export class DirectoryManager {
   private deleteDirectory(path: PathParts): void {
     const parent = this.getDirectory(path.parentPath, this.directory);
     parent.removeChild(path.childName);
-
-    const success = parent.contents[path.childName] == null;
-    if (success) {
-      console.info(`DELETE ${path.pathInput}`);
-    }
   }
 
   /**
