@@ -111,7 +111,7 @@ export class DirectoryManager {
         break;
       case Commands.CREATE:
         try {
-          const [createPath] = parsePaths(args);
+          const [createPath] = parsePaths(args, 1);
           console.info(`${Commands.CREATE} ${createPath.pathInput}`);
           this.createDirectory(createPath);
         } catch (error) {
@@ -121,7 +121,7 @@ export class DirectoryManager {
         }
       case Commands.DELETE:
         try {
-          const [deletePath] = parsePaths(args);
+          const [deletePath] = parsePaths(args, 1);
           console.info(`${Commands.DELETE} ${deletePath.pathInput}`);
           this.deleteDirectory(deletePath);
         } catch (error) {
@@ -131,7 +131,7 @@ export class DirectoryManager {
         }
       case Commands.MOVE:
         try {
-          const [startPath, endPath] = parsePaths(args);
+          const [startPath, endPath] = parsePaths(args, 2);
           console.info(`${Commands.MOVE} ${startPath.pathInput} ${endPath.pathInput}`);
           this.moveDirectory(startPath, endPath)
           break;
