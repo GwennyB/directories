@@ -16,6 +16,8 @@ This is a NodeJS console-based implementation of a directory tree. It is represe
 
 5. (In terminal) Start application: `npm run start`
 
+6. (In termainal) Run tests: `npm test`
+
 # Using the app
 The console application presents command options. To use the app, enter the command in the prompted format.  
 Available commands and expected formats:
@@ -52,3 +54,12 @@ Available commands and expected formats:
 
 Errors are handled and (typically) reported on-screen when encountered, and the application will continue running afterward.
 
+# Architecture
+This implementation uses a tree-node structure, which closely reflects the parent-child hierarchy present in a typical directory structure. The use of recursive navigation means that this approach is suitable for relatively small datasets and a reasonably modern computer.  
+
+Should this application need to scale to support dramatically larger datasets (or a Commodore 64, for instance), or if the app were to be used in a web UI (where lots of clicking can potentially overwhelm the process), a hashing layer (and perhaps an in-mem caching solution) can reduce the need for recursive navigation and improve efficiency for repetitive lookups.  
+
+Additionally, should there be a need to persist this structure external to the application, the command interface could be routed through an API that could carry a more robust caching solution.
+
+# Author
+[Gwen Buchthal | https://github.com/GwennyB]

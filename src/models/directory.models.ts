@@ -1,7 +1,13 @@
+/**
+ * Child directories collection
+ */
 export interface DirectoryContents {
   [name: string]: DirectoryInterface;
 }
 
+/**
+ * Shape definition for any directory
+ */
 export interface DirectoryInterface {
   name: string;
   parent: DirectoryInterface;
