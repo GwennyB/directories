@@ -3,19 +3,14 @@ This is a NodeJS console-based implementation of a directory tree. It is represe
 
 # Getting started
 1. Verify that prerequisites are met:  
- * internet connectivity
- * Mac or WSL (Scripts for Win are not included.)
- * Node v12+
- * NPM v6+
-
+    - internet connectivity
+    - Mac or WSL (Scripts for Win are not included.)
+    - Node v12+
+    - NPM v6+
 2. Clone repo locally: `git clone https://github.com/GwennyB/directories.git`
-
-3. (In terminal) Navigate to the root of the cloned repo.
-
+3. (In terminal) Navigate to the root of the cloned repo. `cd <path_to_cloned_repo>`
 4. (In terminal) Load package dependencies: `npm i`
-
 5. (In terminal) Start application: `npm run start`
-
 6. (In termainal) Run tests: `npm test`
 
 # Using the app
@@ -37,8 +32,8 @@ Available commands and expected formats:
    Required input: `LIST`  
    What it does: Prints (to screen) the full directory structure as it exists currently, and formatted to reflect the directory hierarchy.
 
- * PATH
-   Required input: `PATH <path>`
+ * PATH  
+   Required input: `PATH <path>`. 
    What it does: Fetches commands from a plain text file, formatted as shown above, with one formatted command per line and no empty lines.  
    ex:
    ```
@@ -49,7 +44,7 @@ Available commands and expected formats:
    LIST
    ```
 
- * `<enter>`
+ * `<enter>`  
    What it does: Shuts down the application. Also useful to shut down the application after processing an instructions file by adding an empty line to the end, after the last command.  
 
 Errors are handled and (typically) reported on-screen when encountered, and the application will continue running afterward.
@@ -62,4 +57,4 @@ Should this application need to scale to support dramatically larger datasets (o
 Additionally, should there be a need to persist this structure external to the application, the command interface could be routed through an API that could carry a more robust caching solution.
 
 # Author
-[Gwen Buchthal | https://github.com/GwennyB]
+[Gwen Buchthal](https://github.com/GwennyB)
