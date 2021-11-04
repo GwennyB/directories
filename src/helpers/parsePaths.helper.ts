@@ -6,13 +6,14 @@ import { PathParts } from "../models/pathParts.model";
  * @param pathInputs a list of 'path' arguments provided by the user
  * @returns a list of objects with validated, descriptive segments of target paths
  */
-export const parsePaths = (pathInputs: string[]): PathParts[] => {
+export const parsePaths = (pathInputs: string[], argsCount: number = pathInputs?.length): PathParts[] => {
   if (pathInputs == null
     || !pathInputs.length
     || pathInputs.filter((path) => path == null).length) {
-    throw Error('Path is required. Please try again.');
-  }
-  const parsedPaths: PathParts[] = pathInputs.reduce((acc, pathInput) => {
+      throw Error('Path is required. Please try again.');
+    }
+  const relevantPaths = pathInputs.slice(0, argsCount);
+  const parsedPaths: PathParts[] = relevantPaths.reduce((acc, pathInput) => {
     const childPath = pathInput.split('/');
     const parentPath = childPath.slice(0, childPath.length - 1);
     const pathParts: PathParts = {
